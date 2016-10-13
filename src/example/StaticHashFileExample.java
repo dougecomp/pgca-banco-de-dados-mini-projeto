@@ -29,12 +29,12 @@ public class StaticHashFileExample {
         }
     }
     
-    public static void dublin() throws IOException {
+    public static void indexar(String filename) throws IOException {
         int qtdBuckets = 5;
         int pageSize = 4096;
         
         StaticHashFile file = new StaticHashFile(new DefaultStatisticCenter(),
-                "dublinObjectsSHF.hfl", pageSize, qtdBuckets,
+                filename+".hfl", pageSize, qtdBuckets,
                 new IntegerField("id"),
                 new DoubleField("lat"),
                 new DoubleField("lgt"),
@@ -42,7 +42,7 @@ public class StaticHashFileExample {
 
         file.open();
         if (file.length() == 0) { //load the file
-             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("dublin.txt")));
+             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename)));
                                     
             int id, p1, p2;
             double lat, lgt;
@@ -70,8 +70,10 @@ public class StaticHashFileExample {
             }   
             reader.close();
         }
-        //System.out.println("\n\n Statistics:");
-        //System.out.println(file.getStatisticCenter().status());
+        System.out.println("\n\n Statistics:");
+        for(int numBucket=0;numBucket<qtdBuckets;numBucket++) {
+            System.out.println(file.getStatisticCenter(numBucket).status());
+        }
 
         System.out.println("Numero de registros: "+file.cardinality());
         System.out.println("Numero de páginas: "+file.size());
@@ -91,8 +93,7 @@ public class StaticHashFileExample {
 
         
         file.open();
-        
-        
+
         if (file.length() == 0) {//if the file does not exist yet
             file.insert(file.createRecord(1, "João B. Rocha-Junior", 2304.5));
             file.insert(file.createRecord(2, "Adélia Ico", 5304.5));
@@ -135,7 +136,9 @@ public class StaticHashFileExample {
     }
     
     public static void main(String[] args) throws IOException {
-        dublin();
+        //indexar("dublin.txt");
+        //indexar("australia.txt");
+        indexar("british.txt");
     }
     
 }
