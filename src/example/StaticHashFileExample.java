@@ -180,6 +180,8 @@ public class StaticHashFileExample {
     
     public static void main(String[] args) throws IOException {
         String filename = "dublin.txt";
+        //String filename = "australia.txt";
+        //String filename = "british.txt";
         int qtdConsultas = 10;
         
         // Utilizar função indexar para que os buckets sejam criados

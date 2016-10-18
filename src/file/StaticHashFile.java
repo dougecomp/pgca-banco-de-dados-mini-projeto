@@ -17,7 +17,6 @@ import java.util.Iterator;
 import operators.comparison.LogicOperator;
 import operators.comparison.OperatorSet;
 import operators.comparison.RelOperator;
-import statistics.DefaultStatisticCenter;
 import statistics.StatisticCenter;
 
 /**
