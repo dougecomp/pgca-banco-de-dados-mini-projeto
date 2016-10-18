@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Iterator;
+import java.util.Random;
 import statistics.DefaultStatisticCenter;
 
 /**
@@ -25,12 +26,23 @@ public class StaticHashFileExample {
 
     private static final int QTDBUCKETS = 5;
     private static final int PAGESIZE = 4096;
-    private static final String EXTENSION = "shfl";
+    private static final String EXTENSION = ".shfl";
     
     public static void print(Iterator<Record> it) {
         while (it.hasNext()) {
             System.out.println(it.next());
         }
+    }
+    
+    public static StaticHashFile readFile(String filename) {
+        StaticHashFile file = new StaticHashFile(new DefaultStatisticCenter(),
+                filename+EXTENSION, PAGESIZE, QTDBUCKETS,
+                new IntegerField("id"),
+                new DoubleField("lat"),
+                new DoubleField("lgt"),
+                new StringField("title", 102)); //can store titles with 50 characters
+
+        return file;
     }
     
     public static void indexar(String filename) throws IOException {
@@ -83,19 +95,22 @@ public class StaticHashFileExample {
         file.close();
     }
     
-    public static void buscar(String filename, int sid) throws IOException {
+    public static Iterator<Record> buscar(String filename, int id) throws IOException {
         
         StaticHashFile file = new StaticHashFile(new DefaultStatisticCenter(),
                 filename+EXTENSION, PAGESIZE, QTDBUCKETS,
-                new IntegerField("sid"),
-                new StringField("sname", 300),
-                new DoubleField("income"));
+                new IntegerField("id"),
+                new DoubleField("lat"),
+                new DoubleField("lgt"),
+                new StringField("title", 102)); //can store titles with 50 characters
         
         file.open();
         
-        file.search("sid", sid);
+        Iterator<Record> ir = file.search("id", id);
         
         System.out.println(file.getStatisticCenter(0).status());
+        
+        return ir;
     }
 
     public static void teste() throws IOException {
@@ -150,10 +165,32 @@ public class StaticHashFileExample {
         //System.out.println(file.getStatisticCenter().status());
     }
     
+    public static void fazerConsultas(StaticHashFile file, int qtdConsultas) throws IOException {
+        
+        Random r = new Random();
+        for(int i=0;i<qtdConsultas;i++) {
+            int id = r.nextInt((int)file.cardinality());
+            Iterator<Record> it = file.search("id", id);
+            System.out.println(file.getStatisticCenter(0).status());
+            Record rec = it.next();
+            System.out.println(rec.toString());
+        }
+        
+    }
+    
     public static void main(String[] args) throws IOException {
-        //indexar("dublin.txt");
-        //indexar("australia.txt");
-        indexar("british.txt");
+        String filename = "dublin.txt";
+        int qtdConsultas = 10;
+        
+        // Utilizar função indexar para que os buckets sejam criados
+        //indexar(filename);
+        StaticHashFile file = readFile(filename);
+        file.open();
+        
+        fazerConsultas(file, qtdConsultas);
+        
+        file.close();
+        
     }
     
 }

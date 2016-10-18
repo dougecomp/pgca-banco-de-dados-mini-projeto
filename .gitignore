@@ -7,3 +7,5 @@ nbdist/
 .nb-gradle/
 *.hfl
 *.hfl.mtd
+*.shfl
+*.shfl.mtd
