@@ -168,8 +168,9 @@ public class StaticHashFileExample {
     public static void fazerConsultas(StaticHashFile file, int qtdConsultas) throws IOException {
         
         Random r = new Random();
+        int qtdRegistros = (int)file.cardinality();
         for(int i=0;i<qtdConsultas;i++) {
-            int id = r.nextInt((int)file.cardinality());
+            int id = r.nextInt(qtdRegistros);
             Iterator<Record> it = file.search("id", id);
             System.out.println(file.getStatisticCenter(0).status());
             Record rec = it.next();
@@ -179,6 +180,7 @@ public class StaticHashFileExample {
     }
     
     public static void main(String[] args) throws IOException {
+        
         String filename = "dublin.txt";
         //String filename = "australia.txt";
         //String filename = "british.txt";
