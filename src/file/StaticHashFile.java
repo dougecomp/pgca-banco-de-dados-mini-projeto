@@ -17,6 +17,7 @@ import java.util.Iterator;
 import operators.comparison.LogicOperator;
 import operators.comparison.OperatorSet;
 import operators.comparison.RelOperator;
+import statistics.DefaultStatisticCenter;
 import statistics.StatisticCenter;
 
 /**
@@ -35,6 +36,7 @@ public class StaticHashFile {
      * @param fileName the name of the file
      * @param pageSize the size of the page for this file. All pages in the will
      * have the same size. The pageSize must be a value above zero.
+     * @param qtdBuckets the number of buckets of the static hash
      * @param fields the fields in each record of the file. The order in which
      * the fields are inserted is important.
      */
@@ -42,14 +44,16 @@ public class StaticHashFile {
         this(null, fileName, pageSize, qtdBuckets, fields);
     }
 
-    /**numBucket
+    /**
      * Creates a BlockFile.
      *
+     * @param statisticCenter the class that will collect statistic information
+     * about the file usage
      * @param fileName the name of the file
      * @param pageSize the size of the page for this file. All pages in the will
      * have the same size. The pageSize must be a value above zero.
-     * @param statisticCenter the class that will collect statistic information
-     * about the file usage
+     * @param qtdBuckets Quantidade de buckets da hash estática
+     * @param fields fields of the records
      */
     public StaticHashFile(StatisticCenter statisticCenter, String fileName, int pageSize, int qtdBuckets, Field... fields) {
         this.blockFiles = new BlockFile[qtdBuckets];
@@ -65,6 +69,7 @@ public class StaticHashFile {
     /**
      * This method returns the file name.
      *
+     * @param numBucket índice do bucket
      * @return the file name
      */
     public String getFileName(int numBucket) {
@@ -74,6 +79,7 @@ public class StaticHashFile {
     /**
      * This method returns the statistic center of the given file
      *
+     * @param numBucket índice do bucket
      * @return the statistic center of the given file
      */
     public StatisticCenter getStatisticCenter(int numBucket) {
@@ -236,6 +242,7 @@ public class StaticHashFile {
      * performs a scan in the file in order to figure out the number of records.
      *
      * @return the number of records stored in the file.
+     * @throws IOException
      */
     public long cardinality() throws IOException {
         long count = 0;

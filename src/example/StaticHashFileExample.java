@@ -22,7 +22,11 @@ import statistics.DefaultStatisticCenter;
  * @author douglas
  */
 public class StaticHashFileExample {
- 
+
+    private static final int QTDBUCKETS = 5;
+    private static final int PAGESIZE = 4096;
+    private static final String EXTENSION = "shfl";
+    
     public static void print(Iterator<Record> it) {
         while (it.hasNext()) {
             System.out.println(it.next());
@@ -30,11 +34,9 @@ public class StaticHashFileExample {
     }
     
     public static void indexar(String filename) throws IOException {
-        int qtdBuckets = 5;
-        int pageSize = 4096;
         
         StaticHashFile file = new StaticHashFile(new DefaultStatisticCenter(),
-                filename+".hfl", pageSize, qtdBuckets,
+                filename+EXTENSION, PAGESIZE, QTDBUCKETS,
                 new IntegerField("id"),
                 new DoubleField("lat"),
                 new DoubleField("lgt"),
@@ -71,7 +73,7 @@ public class StaticHashFileExample {
             reader.close();
         }
         System.out.println("\n\n Statistics:");
-        for(int numBucket=0;numBucket<qtdBuckets;numBucket++) {
+        for(int numBucket=0;numBucket<QTDBUCKETS;numBucket++) {
             System.out.println(file.getStatisticCenter(numBucket).status());
         }
 
@@ -80,13 +82,26 @@ public class StaticHashFileExample {
         System.out.println("Numero de bytes: "+file.length());
         file.close();
     }
+    
+    public static void buscar(String filename, int sid) throws IOException {
+        
+        StaticHashFile file = new StaticHashFile(new DefaultStatisticCenter(),
+                filename+EXTENSION, PAGESIZE, QTDBUCKETS,
+                new IntegerField("sid"),
+                new StringField("sname", 300),
+                new DoubleField("income"));
+        
+        file.open();
+        
+        file.search("sid", sid);
+        
+        System.out.println(file.getStatisticCenter(0).status());
+    }
 
     public static void teste() throws IOException {
-        int pageSize = 4096;
-        int qtdBuckets = 5;
 
         StaticHashFile file = new StaticHashFile(new DefaultStatisticCenter(),
-                "staticHashFile.hfl", pageSize, qtdBuckets,
+                "staticHashFile.shfl", PAGESIZE, QTDBUCKETS,
                 new IntegerField("sid"),
                 new StringField("sname", 300),
                 new DoubleField("income"));
