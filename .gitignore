@@ -9,3 +9,5 @@ nbdist/
 *.hfl.mtd
 *.shfl
 *.shfl.mtd
+*.hbsfl
+*.hbsfl.mtd

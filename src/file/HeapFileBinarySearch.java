@@ -12,6 +12,7 @@ import java.util.Iterator;
 import operators.comparison.LogicOperator;
 import operators.comparison.OperatorSet;
 import operators.comparison.RelOperator;
+import operators.comparison.Smaller;
 import statistics.StatisticCenter;
 
 public class HeapFileBinarySearch {
@@ -19,6 +20,9 @@ public class HeapFileBinarySearch {
     private final byte[] buffer;
     private final BlockFile blockFile;
     private final Field[] fields; //the fields of the records stored in the file
+    private Record lastScannedRecord;
+    private String fieldNameSearch;
+    private Comparable valueSearch;
 
     /**
      * Creates a BlockFile.
@@ -164,6 +168,8 @@ public class HeapFileBinarySearch {
      * @throws IOException
      */
     public Iterator<Record> search(String fieldName, Comparable value) throws IOException {
+        fieldNameSearch = fieldName;
+        valueSearch = value;
         return range(fieldName, OperatorSet.eq, value);
     }
 
@@ -199,7 +205,7 @@ public class HeapFileBinarySearch {
      */
     public Iterator<Record> range(String fieldName, RelOperator firstOp, Comparable firstValue,
             LogicOperator logicOp, RelOperator secondOp, Comparable secondValue) throws IOException {
-        return new RangeIterator(scan(), fieldName, firstOp, firstValue,
+        return new RangeBinarySearchIterator(scanBinary(), fieldName, firstOp, firstValue,
                 logicOp, secondOp, secondValue);
     }
 
@@ -213,6 +219,16 @@ public class HeapFileBinarySearch {
         return new ScanIterator();
     }
 
+    /**
+     * This method returns an iterator over all records in the file
+     *
+     * @return the iterator over all records of the file
+     * @throws IOException
+     */
+    public Iterator<Record> scanBinary() throws IOException {
+        return new ScanBinarySearchIterator();
+    }
+    
     /**
      * This method returns the number of records stored in the file. This method
      * performs a scan in the file in order to figure out the number of records.
@@ -356,6 +372,162 @@ public class HeapFileBinarySearch {
                         break; //leave the loop
                     } else {
                         it = null;
+                    }
+                }
+                return it;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return recIterator != null && recIterator.hasNext();
+        }
+
+        @Override
+        public Record next() {
+            Record data = null;
+            if (recIterator != null) {
+                data = recIterator.next();
+
+                if (!recIterator.hasNext()) {
+                    recIterator = nextPageIterator();
+                }
+            }
+            return data;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
+    
+    /**
+     * This method iterates of the records that attends a search criteria
+     * 
+     * Change this iterator with the ScanBinarySearchIterator to implements the binary search on a file
+     */
+    private class RangeBinarySearchIterator implements Iterator<Record> {
+
+        private final Iterator<Record> scan;
+        private final String fieldName;
+        private final Comparable firstValue, secondValue;
+        private final RelOperator firstOp, secondOp;
+        private final LogicOperator logicOp;
+        private Record nextRec;
+        private Record lastRec;
+
+        public RangeBinarySearchIterator(Iterator<Record> scan, String fieldName,
+                RelOperator firstOp, Comparable firstValue,
+                LogicOperator logicOp, RelOperator secondOp, Comparable secondValue) {
+            this.scan = scan;
+            this.fieldName = fieldName;
+            this.firstOp = firstOp;
+            this.firstValue = firstValue;
+            this.logicOp = logicOp;
+            this.secondOp = secondOp;
+            this.secondValue = secondValue;
+
+            nextRec = getNextRecord();
+        }
+
+        @Override
+        public boolean hasNext() {
+            return nextRec != null;
+        }
+
+        @Override
+        public Record next() {
+            lastRec = nextRec;
+            nextRec = getNextRecord();
+            return lastRec;
+        }
+
+        private Record getNextRecord() {            
+            while (scan.hasNext()) { // Varrendo os registros de uma página retornada do scan
+                Record rec = scan.next();
+                Comparable fieldValue = rec.get(fieldName).getValue();
+
+                if (logicOp == null) { //checks only the left side (first operator and value)
+                    if (firstOp.compare(fieldValue, firstValue)) {
+                        lastScannedRecord = rec;
+                        return rec; //it has found a record that attends the query
+                    }
+                } else {
+                    if (logicOp.compare(firstOp.compare(fieldValue, firstValue),
+                            secondOp.compare(fieldValue, secondValue))) {
+                        lastScannedRecord = rec;                        
+                        return rec; //it has found a record that attends the query
+                    }
+                }                
+            }
+            return null;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
+
+    /**
+     * Scans the heap file
+     */
+    private class ScanBinarySearchIterator implements Iterator<Record> {
+
+        private long numPages = 0;
+        private final byte[] buffer;
+        private int currentPageId = 0; // Ajustar para começar do meio do arquivo, ou seja, começar na página central do arquivo
+        private Page currentPage;
+        private Iterator<Record> recIterator;
+        private int startPageId = 1;
+        private int lastPageId;
+
+        public ScanBinarySearchIterator() throws IOException {
+            buffer = new byte[blockFile.getBlockSize()];
+            numPages = blockFile.size();
+            lastPageId = (int) numPages;
+            updateCurrentPageId();
+            recIterator = nextPageIterator();
+        }
+
+        private void updateCurrentPageId() {
+            currentPageId = (int) Math.ceil( ( startPageId + lastPageId ) / 2 );
+        }
+        
+        private void goRight() {
+            startPageId = currentPageId + 1;
+            updateCurrentPageId();
+        }
+        
+        private void goLeft() {
+            lastPageId = currentPageId - 1;
+            updateCurrentPageId();
+        }
+        
+        private Iterator<Record> nextPageIterator() {
+            try {
+                Iterator<Record> it = null;
+                while (startPageId < lastPageId) {
+                    //currentPageId++; // Como passar aqui para o scan para qual lado ele deve seguir???
+                    blockFile.read(currentPageId, buffer);
+                    currentPage = Page.createPage(buffer, fields);
+                    it = currentPage.iterator();
+                    if (it.hasNext()) { //checks if there is records in the page
+                        break; //leave the loop
+                    } else {
+                        it = null;
+                    }
+                    if(lastScannedRecord != null) {
+                        Comparable value = lastScannedRecord.get(fieldNameSearch).getValue();
+                        Smaller so = new Smaller();
+                        if(so.compare(value, valueSearch)) {
+                            this.goLeft();
+                        } else {
+                            this.goRight();
+                        }
                     }
                 }
                 return it;
