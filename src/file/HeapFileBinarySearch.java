@@ -9,6 +9,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
 import java.util.Iterator;
+import operators.comparison.Greater;
 import operators.comparison.LogicOperator;
 import operators.comparison.OperatorSet;
 import operators.comparison.RelOperator;
@@ -445,20 +446,21 @@ public class HeapFileBinarySearch {
             return lastRec;
         }
 
-        private Record getNextRecord() {            
+        private Record getNextRecord() {
             while (scan.hasNext()) { // Varrendo os registros de uma página retornada do scan
                 Record rec = scan.next();
+                lastScannedRecord = rec;
+                
                 Comparable fieldValue = rec.get(fieldName).getValue();
 
                 if (logicOp == null) { //checks only the left side (first operator and value)
                     if (firstOp.compare(fieldValue, firstValue)) {
-                        lastScannedRecord = rec;
+                        lastScannedRecord = null;
                         return rec; //it has found a record that attends the query
                     }
                 } else {
                     if (logicOp.compare(firstOp.compare(fieldValue, firstValue),
-                            secondOp.compare(fieldValue, secondValue))) {
-                        lastScannedRecord = rec;                        
+                            secondOp.compare(fieldValue, secondValue))) {                        
                         return rec; //it has found a record that attends the query
                     }
                 }                
@@ -479,7 +481,7 @@ public class HeapFileBinarySearch {
 
         private long numPages = 0;
         private final byte[] buffer;
-        private int currentPageId = 0; // Ajustar para começar do meio do arquivo, ou seja, começar na página central do arquivo
+        private int currentPageId = 0;
         private Page currentPage;
         private Iterator<Record> recIterator;
         private int startPageId = 1;
@@ -489,12 +491,12 @@ public class HeapFileBinarySearch {
             buffer = new byte[blockFile.getBlockSize()];
             numPages = blockFile.size();
             lastPageId = (int) numPages;
-            updateCurrentPageId();
+            //updateCurrentPageId();
             recIterator = nextPageIterator();
         }
 
         private void updateCurrentPageId() {
-            currentPageId = (int) Math.ceil( ( startPageId + lastPageId ) / 2 );
+            currentPageId = ( startPageId + lastPageId ) / 2 ;
         }
         
         private void goRight() {
@@ -510,8 +512,20 @@ public class HeapFileBinarySearch {
         private Iterator<Record> nextPageIterator() {
             try {
                 Iterator<Record> it = null;
-                while (startPageId < lastPageId) {
-                    //currentPageId++; // Como passar aqui para o scan para qual lado ele deve seguir???
+                while (startPageId <= lastPageId) {
+                    if(currentPageId == 0) {
+                        updateCurrentPageId();
+                    } else if(lastScannedRecord != null) {
+                        Comparable value = lastScannedRecord.get(fieldNameSearch).getValue();
+                        Smaller so = new Smaller();
+                        Greater go = new Greater();
+                        if(so.compare(valueSearch, value)) {
+                            this.goLeft();
+                        } else if(go.compare(valueSearch, value)){
+                            this.goRight();
+                        }
+                    }
+                    
                     blockFile.read(currentPageId, buffer);
                     currentPage = Page.createPage(buffer, fields);
                     it = currentPage.iterator();
@@ -519,15 +533,6 @@ public class HeapFileBinarySearch {
                         break; //leave the loop
                     } else {
                         it = null;
-                    }
-                    if(lastScannedRecord != null) {
-                        Comparable value = lastScannedRecord.get(fieldNameSearch).getValue();
-                        Smaller so = new Smaller();
-                        if(so.compare(value, valueSearch)) {
-                            this.goLeft();
-                        } else {
-                            this.goRight();
-                        }
                     }
                 }
                 return it;

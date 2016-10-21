@@ -168,6 +168,7 @@ public class HeapFileBinarySearchExample {
         int qtdRegistros = (int)file.cardinality();
         for(int i=0;i<qtdConsultas;i++) {
             int id = r.nextInt(qtdRegistros);
+            //System.out.println("ID a ser pesquisado: "+id);
             Iterator<Record> it = file.search("id", id);
             System.out.println(file.getStatisticCenter().status());
             Record rec = it.next();
