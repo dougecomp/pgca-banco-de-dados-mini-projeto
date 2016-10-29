@@ -60,7 +60,7 @@ public class StaticHashFile {
     public StaticHashFile(StatisticCenter statisticCenter, String fileName, int pageSize, int qtdBuckets, Field... fields) {
         this.blockFiles = new BlockFile[qtdBuckets];
         for(int i=0;i<qtdBuckets;i++) {
-            this.blockFiles[i] = new BlockFile(i+fileName, pageSize, statisticCenter);
+            this.blockFiles[i] = new BlockFile("temp/"+i+fileName, pageSize, statisticCenter);
         }
         //this.blockFile = new BlockFile(fileName, pageSize, statisticCenter);
         this.fields = fields;
@@ -371,7 +371,7 @@ public class StaticHashFile {
     /**
      * Scans the heap file
      */
-    private class ScanIterator implements Iterator<Record> {
+    private class StaticHashSearchIterator implements Iterator<Record> {
 
         private long numPages = 0;
         private byte[] buffer;
@@ -380,7 +380,7 @@ public class StaticHashFile {
         private Iterator<Record> recIterator;
         private final int numBucket;
 
-        public ScanIterator() throws IOException {
+        public StaticHashSearchIterator() throws IOException {
             this.numBucket = hash((int) valueSearch) % qtdBuckets;
             buffer = new byte[blockFiles[numBucket].getBlockSize()];
             numPages = blockFiles[numBucket].size();
@@ -434,7 +434,7 @@ public class StaticHashFile {
     /**
      * Scans the heap file
      */
-    private class StaticHashSearchIterator implements Iterator<Record> {
+    private class ScanIterator implements Iterator<Record> {
 
         private long numPages = 0;
         private byte[] buffer;
@@ -443,7 +443,7 @@ public class StaticHashFile {
         private Iterator<Record> recIterator;
         private int numBucket;
 
-        public StaticHashSearchIterator() throws IOException {
+        public ScanIterator() throws IOException {
             this.numBucket = 0;
             buffer = new byte[blockFiles[numBucket].getBlockSize()];
             numPages = blockFiles[numBucket].size();

@@ -182,18 +182,24 @@ public class StaticHashFileExample {
     public static void main(String[] args) throws IOException {
         
         String filename = "dublin.txt";
+        boolean indexar = true;
+        boolean buscar = false;
         //String filename = "australia.txt";
         //String filename = "british.txt";
         int qtdConsultas = 10;
         
         // Utilizar função indexar para que os buckets sejam criados
-        //indexar(filename);
-        StaticHashFile file = readFile(filename);
-        file.open();
-        
-        fazerConsultas(file, qtdConsultas);
-        
-        file.close();
+        if(indexar) {
+            indexar(filename);
+        }
+        if(buscar) {
+            StaticHashFile file = readFile(filename);
+            file.open();
+
+            fazerConsultas(file, qtdConsultas);
+
+            file.close();
+        }
         
     }
     
