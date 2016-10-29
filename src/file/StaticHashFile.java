@@ -453,7 +453,7 @@ public class StaticHashFile {
         private Iterator<Record> nextPageIterator() {
             try {
                 Iterator<Record> it = null;
-                while (currentPageId < numPages ) {
+                while (currentPageId < numPages || numBucket < qtdBuckets ) {
                     if( numPages == 0 || currentPageId == numPages) {
                         numBucket++;
                         if(numBucket >= qtdBuckets) {

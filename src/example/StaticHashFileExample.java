@@ -108,7 +108,7 @@ public class StaticHashFileExample {
         
         Iterator<Record> ir = file.search("id", id);
         
-        System.out.println(file.getStatisticCenter(0).status());
+        //System.out.println(file.getStatisticCenter(0).status());
         
         return ir;
     }
@@ -168,13 +168,14 @@ public class StaticHashFileExample {
     public static void fazerConsultas(StaticHashFile file, int qtdConsultas) throws IOException {
         
         Random r = new Random();
+        System.out.println(file.getStatisticCenter(0).status());
         int qtdRegistros = (int)file.cardinality();
         for(int i=0;i<qtdConsultas;i++) {
             int id = r.nextInt(qtdRegistros);
             Iterator<Record> it = file.search("id", id);
-            System.out.println(file.getStatisticCenter(0).status());
             Record rec = it.next();
             System.out.println(rec.toString());
+            System.out.println(file.getStatisticCenter(0).status());
         }
         
     }
