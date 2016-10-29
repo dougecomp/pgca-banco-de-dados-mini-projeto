@@ -24,7 +24,7 @@ import statistics.DefaultStatisticCenter;
  */
 public class StaticHashFileExample {
 
-    private static final int QTDBUCKETS = 5;
+    private static final int QTDBUCKETS = 50;
     private static final int PAGESIZE = 4096;
     private static final String EXTENSION = ".shfl";
     
@@ -42,6 +42,7 @@ public class StaticHashFileExample {
                 new DoubleField("lgt"),
                 new StringField("title", 102)); //can store titles with 50 characters
 
+        //System.out.println(file.getStatisticCenter(0).status());
         return file;
     }
     
@@ -85,9 +86,7 @@ public class StaticHashFileExample {
             reader.close();
         }
         System.out.println("\n\n Statistics:");
-        for(int numBucket=0;numBucket<QTDBUCKETS;numBucket++) {
-            System.out.println(file.getStatisticCenter(numBucket).status());
-        }
+        System.out.println(file.getStatisticCenter(0).status());
 
         System.out.println("Numero de registros: "+file.cardinality());
         System.out.println("Numero de páginas: "+file.size());
@@ -183,8 +182,8 @@ public class StaticHashFileExample {
     public static void main(String[] args) throws IOException {
         
         String filename = "dublin.txt";
-        boolean indexar = true;
-        boolean buscar = false;
+        boolean indexar = false;
+        boolean buscar = true;
         //String filename = "australia.txt";
         //String filename = "british.txt";
         int qtdConsultas = 10;
