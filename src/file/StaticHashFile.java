@@ -29,6 +29,9 @@ public class StaticHashFile {
     private final BlockFile[] blockFiles;
     private final Field[] fields; //the fields of the records stored in the file
     private final int qtdBuckets;
+    private String fieldNameSearch;
+    private Comparable valueSearch;
+    
     /**
      * Creates a BlockFile.
      *
@@ -187,6 +190,8 @@ public class StaticHashFile {
      * @throws IOException
      */
     public Iterator<Record> search(String fieldName, Comparable value) throws IOException {
+        fieldNameSearch = fieldName;
+        valueSearch = value;
         return range(fieldName, OperatorSet.eq, value);
     }
 
@@ -222,7 +227,7 @@ public class StaticHashFile {
      */
     public Iterator<Record> range(String fieldName, RelOperator firstOp, Comparable firstValue,
             LogicOperator logicOp, RelOperator secondOp, Comparable secondValue) throws IOException {
-        return new RangeIterator(scan(), fieldName, firstOp, firstValue,
+        return new RangeIterator(staticHashSearch(), fieldName, firstOp, firstValue,
                 logicOp, secondOp, secondValue);
     }
 
@@ -234,6 +239,10 @@ public class StaticHashFile {
      */
     public Iterator<Record> scan() throws IOException {
         return new ScanIterator();
+    }
+    
+    public Iterator<Record> staticHashSearch() throws IOException {
+        return new StaticHashSearchIterator();
     }
 
     /**
@@ -369,9 +378,72 @@ public class StaticHashFile {
         private int currentPageId = 0;
         private Page currentPage;
         private Iterator<Record> recIterator;
-        private int numBucket;
+        private final int numBucket;
 
         public ScanIterator() throws IOException {
+            this.numBucket = hash((int) valueSearch) % qtdBuckets;
+            buffer = new byte[blockFiles[numBucket].getBlockSize()];
+            numPages = blockFiles[numBucket].size();
+            recIterator = nextPageIterator();
+        }
+
+        private Iterator<Record> nextPageIterator() {
+            try {
+                Iterator<Record> it = null;
+                while (currentPageId < numPages) {
+                    currentPageId++;
+                    blockFiles[numBucket].read(currentPageId, buffer);
+                    currentPage = Page.createPage(buffer, fields);
+                    it = currentPage.iterator();
+                    if (it.hasNext()) { //checks if there is records in the page
+                        break; //leave the loop
+                    } else {
+                        it = null;
+                    }
+                }
+                return it;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return recIterator != null && recIterator.hasNext();
+        }
+
+        @Override
+        public Record next() {
+            Record data = null;
+            if (recIterator != null) {
+                data = recIterator.next();
+
+                if (!recIterator.hasNext()) {
+                    recIterator = nextPageIterator();
+                }
+            }
+            return data;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+    }
+    
+    /**
+     * Scans the heap file
+     */
+    private class StaticHashSearchIterator implements Iterator<Record> {
+
+        private long numPages = 0;
+        private byte[] buffer;
+        private int currentPageId = 0;
+        private Page currentPage;
+        private Iterator<Record> recIterator;
+        private int numBucket;
+
+        public StaticHashSearchIterator() throws IOException {
             this.numBucket = 0;
             buffer = new byte[blockFiles[numBucket].getBlockSize()];
             numPages = blockFiles[numBucket].size();
@@ -381,7 +453,7 @@ public class StaticHashFile {
         private Iterator<Record> nextPageIterator() {
             try {
                 Iterator<Record> it = null;
-                while (currentPageId < numPages || numBucket < qtdBuckets) {
+                while (currentPageId < numPages ) {
                     if( numPages == 0 || currentPageId == numPages) {
                         numBucket++;
                         if(numBucket >= qtdBuckets) {
