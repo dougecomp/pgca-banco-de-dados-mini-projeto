@@ -168,30 +168,45 @@ public class HeapFileBinarySearchExample {
         int qtdRegistros = (int)file.cardinality();
         for(int i=0;i<qtdConsultas;i++) {
             int id = r.nextInt(qtdRegistros);
-            //System.out.println("ID a ser pesquisado: "+id);
+            //System.out.println("Consulta Nº "+(i+1));
+            //System.out.println("Buscando id nº "+id);
+            //file.getStatisticCenter(0).resetCounts();
             Iterator<Record> it = file.search("id", id);
-            System.out.println(file.getStatisticCenter().status());
             Record rec = it.next();
-            System.out.println(rec.toString());
+            //System.out.println(rec.toString());
+            //System.out.println("blocksRead: "+pagesRead);
+            //System.out.println("readTime: "+readTime);
+            //System.out.println("");
+            //System.out.println(file.getStatisticCenter(0).status());
         }
+        double readTime = file.getStatisticCenter().getTally("readTime").getMean();
+        double pagesRead = file.getStatisticCenter().getCount("blocksRead").getValue();
+        System.out.println("blocksRead: "+pagesRead);
+        System.out.println("Mean readTime: "+readTime);
         
     }
     
     public static void main(String[] args) throws IOException {
         
-        String filename = "dublin.txt";
-        //String filename = "australia.txt";
+        //String filename = "dublin.txt";
+        String filename = "australia.txt";
         //String filename = "british.txt";
-        int qtdConsultas = 10;
+        boolean indexar = false;
+        int qtdConsultas = 200;
         
-        // Utilizar função indexar para que os buckets sejam criados
-        //indexar(filename);
-        HeapFileBinarySearch file = readFile(filename);
-        file.open();
-        
-        fazerConsultas(file, qtdConsultas);
-        
-        file.close();
+        // Utilizar função indexar caso o arquivo com os dados ainda não ter sido criado
+        if(indexar) {
+            System.out.println("Indexando "+filename);
+            indexar(filename);
+        } else {
+            System.out.println("Fazendo consultas em "+filename);
+            HeapFileBinarySearch file = readFile(filename);
+            file.open();
+
+            fazerConsultas(file, qtdConsultas);
+
+            file.close();
+        }
         
     }
     

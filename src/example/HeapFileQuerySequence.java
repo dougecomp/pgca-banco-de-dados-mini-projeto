@@ -8,6 +8,7 @@ package example;
 import field.DoubleField;
 import field.IntegerField;
 import field.StringField;
+import file.HeapFile;
 import file.Record;
 import file.StaticHashFile;
 import java.io.BufferedReader;
@@ -22,11 +23,10 @@ import statistics.DefaultStatisticCenter;
  *
  * @author douglas
  */
-public class StaticHashFileExample {
+public class HeapFileQuerySequence {
 
-    private static final int QTDBUCKETS = 50;
     private static final int PAGESIZE = 4096;
-    private static final String EXTENSION = ".shfl";
+    private static final String EXTENSION = ".hfl";
     
     public static void print(Iterator<Record> it) {
         while (it.hasNext()) {
@@ -34,9 +34,9 @@ public class StaticHashFileExample {
         }
     }
     
-    public static StaticHashFile readFile(String filename) {
-        StaticHashFile file = new StaticHashFile(new DefaultStatisticCenter(),
-                filename+EXTENSION, PAGESIZE, QTDBUCKETS,
+    public static HeapFile readFile(String filename) {
+        HeapFile file = new HeapFile(new DefaultStatisticCenter(),
+                filename+EXTENSION, PAGESIZE, 
                 new IntegerField("id"),
                 new DoubleField("lat"),
                 new DoubleField("lgt"),
@@ -48,8 +48,8 @@ public class StaticHashFileExample {
     
     public static void indexar(String filename) throws IOException {
         
-        StaticHashFile file = new StaticHashFile(new DefaultStatisticCenter(),
-                filename+EXTENSION, PAGESIZE, QTDBUCKETS,
+        HeapFile file = new HeapFile(new DefaultStatisticCenter(),
+                filename+EXTENSION, PAGESIZE,
                 new IntegerField("id"),
                 new DoubleField("lat"),
                 new DoubleField("lgt"),
@@ -86,7 +86,7 @@ public class StaticHashFileExample {
             reader.close();
         }
         System.out.println("\n\n Statistics:");
-        System.out.println(file.getStatisticCenter(0).status());
+        System.out.println(file.getStatisticCenter().status());
 
         System.out.println("Numero de registros: "+file.cardinality());
         System.out.println("Numero de páginas: "+file.size());
@@ -96,8 +96,8 @@ public class StaticHashFileExample {
     
     public static Iterator<Record> buscar(String filename, int id) throws IOException {
         
-        StaticHashFile file = new StaticHashFile(new DefaultStatisticCenter(),
-                filename+EXTENSION, PAGESIZE, QTDBUCKETS,
+        HeapFile file = new HeapFile(new DefaultStatisticCenter(),
+                filename+EXTENSION, PAGESIZE,
                 new IntegerField("id"),
                 new DoubleField("lat"),
                 new DoubleField("lgt"),
@@ -114,8 +114,8 @@ public class StaticHashFileExample {
 
     public static void teste() throws IOException {
 
-        StaticHashFile file = new StaticHashFile(new DefaultStatisticCenter(),
-                "staticHashFile.shfl", PAGESIZE, QTDBUCKETS,
+        HeapFile file = new HeapFile(new DefaultStatisticCenter(),
+                "staticHashFile.shfl", PAGESIZE,
                 new IntegerField("sid"),
                 new StringField("sname", 300),
                 new DoubleField("income"));
@@ -164,15 +164,15 @@ public class StaticHashFileExample {
         //System.out.println(file.getStatisticCenter().status());
     }
     
-    public static void fazerConsultas(StaticHashFile file, int qtdConsultas) throws IOException {
+    public static void fazerConsultas(HeapFile file, int qtdConsultas) throws IOException {
         
         Random r = new Random();
         int qtdRegistros = (int)file.cardinality();
+        file.getStatisticCenter().resetCounts();
         for(int i=0;i<qtdConsultas;i++) {
             int id = r.nextInt(qtdRegistros);
             //System.out.println("Consulta Nº "+(i+1));
             //System.out.println("Buscando id nº "+id);
-            //file.getStatisticCenter(0).resetCounts();
             Iterator<Record> it = file.search("id", id);
             Record rec = it.next();
             //System.out.println(rec.toString());
@@ -181,8 +181,8 @@ public class StaticHashFileExample {
             //System.out.println("");
             //System.out.println(file.getStatisticCenter(0).status());
         }
-        double readTime = file.getStatisticCenter(0).getTally("readTime").getMean();
-        double pagesRead = file.getStatisticCenter(0).getCount("blocksRead").getValue();
+        double readTime = file.getStatisticCenter().getTally("readTime").getMean();
+        double pagesRead = file.getStatisticCenter().getCount("blocksRead").getValue();
         System.out.println("blocksRead: "+pagesRead);
         System.out.println("Mean readTime: "+readTime);
         
@@ -190,8 +190,8 @@ public class StaticHashFileExample {
     
     public static void main(String[] args) throws IOException {
         
-        //String filename = "dublin.txt";
-        String filename = "australia.txt";
+        String filename = "dublin.txt";
+        //String filename = "australia.txt";
         //String filename = "british.txt";
         boolean indexar = false;
         int qtdConsultas = 200;
@@ -202,7 +202,7 @@ public class StaticHashFileExample {
             indexar(filename);
         } else {
             System.out.println("Fazendo consultas em "+filename);
-            StaticHashFile file = readFile(filename);
+            HeapFile file = readFile(filename);
             file.open();
 
             fazerConsultas(file, qtdConsultas);

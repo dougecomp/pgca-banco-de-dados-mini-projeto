@@ -31,7 +31,7 @@ public class StaticHashFile {
     private final int qtdBuckets;
     private String fieldNameSearch;
     private Comparable valueSearch;
-    private boolean findedRecord = false;
+    private boolean foundedRecord = false;
     
     /**
      * Creates a BlockFile.
@@ -351,7 +351,7 @@ public class StaticHashFile {
 
                 if (logicOp == null) { //checks only th left side (first operator and value)
                     if (firstOp.compare(fieldValue, firstValue)) {
-                        findedRecord = true;
+                        foundedRecord = true;
                         return rec; //it has found a record that attends the query
                     }
                 } else {
@@ -386,14 +386,14 @@ public class StaticHashFile {
             this.numBucket = hash((int) valueSearch) % qtdBuckets;
             buffer = new byte[blockFiles[numBucket].getBlockSize()];
             numPages = blockFiles[numBucket].size();
-            findedRecord = false;
+            foundedRecord = false;
             recIterator = nextPageIterator();
         }
 
         private Iterator<Record> nextPageIterator() {
             try {
                 Iterator<Record> it = null;
-                while (findedRecord == false) {
+                while (foundedRecord == false && currentPageId < numPages) {
                     currentPageId++;
                     blockFiles[numBucket].read(currentPageId, buffer);
                     currentPage = Page.createPage(buffer, fields);

@@ -48,7 +48,7 @@ public class HeapFileBinarySearch {
      * about the file usage
      */
     public HeapFileBinarySearch(StatisticCenter statisticCenter, String fileName, int pageSize, Field... fields) {
-        this.blockFile = new BlockFile(fileName, pageSize, statisticCenter);
+        this.blockFile = new BlockFile("temp/"+fileName, pageSize, statisticCenter);
         this.fields = fields;
         this.buffer = new byte[pageSize];
     }
@@ -526,11 +526,15 @@ public class HeapFileBinarySearch {
                         }
                     }
                     
-                    blockFile.read(currentPageId, buffer);
-                    currentPage = Page.createPage(buffer, fields);
-                    it = currentPage.iterator();
-                    if (it.hasNext()) { //checks if there is records in the page
-                        break; //leave the loop
+                    if(currentPageId > 0) {
+                        blockFile.read(currentPageId, buffer);
+                        currentPage = Page.createPage(buffer, fields);
+                        it = currentPage.iterator();
+                        if (it.hasNext()) { //checks if there is records in the page
+                            break; //leave the loop
+                        } else {
+                            it = null;
+                        }
                     } else {
                         it = null;
                     }
