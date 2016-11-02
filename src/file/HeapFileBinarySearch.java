@@ -491,7 +491,6 @@ public class HeapFileBinarySearch {
             buffer = new byte[blockFile.getBlockSize()];
             numPages = blockFile.size();
             lastPageId = (int) numPages;
-            //updateCurrentPageId();
             recIterator = nextPageIterator();
         }
 

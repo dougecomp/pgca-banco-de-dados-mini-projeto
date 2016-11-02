@@ -168,13 +168,15 @@ public class StaticHashFileExample {
         
         Random r = new Random();
         int qtdRegistros = (int)file.cardinality();
+        file.getStatisticCenter(0).resetCounts();
         for(int i=0;i<qtdConsultas;i++) {
             int id = r.nextInt(qtdRegistros);
             //System.out.println("Consulta Nº "+(i+1));
             //System.out.println("Buscando id nº "+id);
-            //file.getStatisticCenter(0).resetCounts();
             Iterator<Record> it = file.search("id", id);
+            System.out.println(file.getStatisticCenter(0).getTally("readTime").getMean()*file.getStatisticCenter(0).getCount("blocksRead").getValue());
             Record rec = it.next();
+            file.getStatisticCenter(0).resetCounts();
             //System.out.println(rec.toString());
             //System.out.println("blocksRead: "+pagesRead);
             //System.out.println("readTime: "+readTime);
@@ -183,8 +185,8 @@ public class StaticHashFileExample {
         }
         double readTime = file.getStatisticCenter(0).getTally("readTime").getMean();
         double pagesRead = file.getStatisticCenter(0).getCount("blocksRead").getValue();
-        System.out.println("blocksRead: "+pagesRead);
-        System.out.println("Mean readTime: "+readTime);
+        //System.out.println("blocksRead: "+pagesRead);
+        //System.out.println("Mean readTime: "+readTime);
         
     }
     

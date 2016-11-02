@@ -166,13 +166,15 @@ public class HeapFileBinarySearchExample {
         
         Random r = new Random();
         int qtdRegistros = (int)file.cardinality();
+        file.getStatisticCenter().resetCounts();
         for(int i=0;i<qtdConsultas;i++) {
             int id = r.nextInt(qtdRegistros);
             //System.out.println("Consulta Nº "+(i+1));
             //System.out.println("Buscando id nº "+id);
-            //file.getStatisticCenter(0).resetCounts();
             Iterator<Record> it = file.search("id", id);
+            System.out.println(file.getStatisticCenter().getTally("readTime").getMean()*file.getStatisticCenter().getCount("blocksRead").getValue());
             Record rec = it.next();
+            file.getStatisticCenter().resetCounts();
             //System.out.println(rec.toString());
             //System.out.println("blocksRead: "+pagesRead);
             //System.out.println("readTime: "+readTime);
@@ -181,8 +183,8 @@ public class HeapFileBinarySearchExample {
         }
         double readTime = file.getStatisticCenter().getTally("readTime").getMean();
         double pagesRead = file.getStatisticCenter().getCount("blocksRead").getValue();
-        System.out.println("blocksRead: "+pagesRead);
-        System.out.println("Mean readTime: "+readTime);
+        //System.out.println("blocksRead: "+pagesRead);
+        //System.out.println("Mean readTime: "+readTime);
         
     }
     

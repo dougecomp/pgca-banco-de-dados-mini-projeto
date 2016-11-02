@@ -174,7 +174,9 @@ public class HeapFileQuerySequence {
             //System.out.println("Consulta Nº "+(i+1));
             //System.out.println("Buscando id nº "+id);
             Iterator<Record> it = file.search("id", id);
+            System.out.println(file.getStatisticCenter().getTally("readTime").getMean()*file.getStatisticCenter().getCount("blocksRead").getValue());
             Record rec = it.next();
+            file.getStatisticCenter().resetCounts();
             //System.out.println(rec.toString());
             //System.out.println("blocksRead: "+pagesRead);
             //System.out.println("readTime: "+readTime);
@@ -183,15 +185,15 @@ public class HeapFileQuerySequence {
         }
         double readTime = file.getStatisticCenter().getTally("readTime").getMean();
         double pagesRead = file.getStatisticCenter().getCount("blocksRead").getValue();
-        System.out.println("blocksRead: "+pagesRead);
-        System.out.println("Mean readTime: "+readTime);
+        //System.out.println("blocksRead: "+pagesRead);
+        //System.out.println("Mean readTime: "+readTime);
         
     }
     
     public static void main(String[] args) throws IOException {
         
-        String filename = "dublin.txt";
-        //String filename = "australia.txt";
+        //String filename = "dublin.txt";
+        String filename = "australia.txt";
         //String filename = "british.txt";
         boolean indexar = false;
         int qtdConsultas = 200;
